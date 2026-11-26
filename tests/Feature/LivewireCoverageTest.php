@@ -12,7 +12,7 @@ it('covers accounting-bank-rules-livewire components', function (): void {
     $provider = $this->app->register(BankRulesLivewireServiceProvider::class, force: true);
     $provider->boot();
 
-    expect(fn () => (new Rules)->mount())->toThrow(AuthorizationException::class);
+    expect(fn () => (new Rules())->mount())->toThrow(AuthorizationException::class);
 
     $user = User::factory()->create(['current_team_id' => 1]);
     $this->actingAs($user);
@@ -22,15 +22,19 @@ it('covers accounting-bank-rules-livewire components', function (): void {
         'name' => 'Coffee Rule',
         'priority' => 10,
         'enabled' => true,
-        'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'coffee']],
+        'conditions' => ['text' => 'coffee'],
         'actions' => ['category' => 'meals'],
         'automation_mode' => 'suggest',
     ]);
 
-    $component = new Rules;
+    $component = new Rules();
     $component->mount();
     $component->transactionText = 'Morning coffee shop';
     $component->testRule((int) $rule->getKey());
     expect($component->testResult)->toBe('Rule matched.');
+
+    $component->transactionText = 'Office supplies';
+    $component->testRule((int) $rule->getKey());
+    expect($component->testResult)->toBe('Rule did not match.');
     expect($component->render())->not->toBeNull();
 });
